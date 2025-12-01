@@ -4,8 +4,8 @@ from telebot import types
 song_text = """Выходите бесы, мы станцуем jersey,
 Отойди я войду и она воскреснет,
 Пристегнись и смотри как тебе Олеся,
-Жопа каждой из моих подруг в AMG обвесе,
-Turn around let me take my glock"""
+П*па каждой из моих подруг в AMG обвесе,
+Turn around let me take my gl0ck"""
 list_of_users = ['Fghjksev','lopyx26','Lerka22848']
 
 text = song_text.split(",")
