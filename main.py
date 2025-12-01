@@ -8,8 +8,6 @@ song_text = """Выходите бесы, мы станцуем jersey,
 Turn around let me take my gl0ck"""
 list_of_users = ['Fghjksev','lopyx26','Lerka22848']
 
-text = song_text.split(",")
-
 lid = 0
 tryi = 0
 delay = 0
@@ -153,12 +151,24 @@ def msg_command(msg):
         print(error)
 @bot.message_handler(commands=["song"])
 def song_command(msg):
-    global text
+    global song_text
+    text = song_text.split(",")
     message = bot.send_message(msg.chat.id,"*Текст*")
     for select in text:
         bot.edit_message_text(chat_id=msg.chat.id,message_id=message.message_id, text=select)
         time.sleep(1.5)
     time.sleep(3)
     bot.delete_message(chat_id=msg.chat.id,message_id=message.message_id)
+@bot.message_handler(commands=["song_upload"])
+def song_upload(msg):
+    bot.send_message(msg.chat.id,"Введите текста каждая должна начинаться с запятой:")
+    bot.register_next_step_handler(msg, song_load)
+def song_load(msg):
+    global song_text
+    try:
+       song_text = msg.text
+       bot.send_message(msg.chat.id,"Успешно!")
+    except:
+       bot.send_message(msg.chat.id,"Ошибка!")
 
 bot.infinity_polling()
