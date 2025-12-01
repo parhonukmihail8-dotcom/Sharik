@@ -1,7 +1,14 @@
 import random, telebot, time, sqlite3, os
 from telebot import types
 
+song_text = """Выходите бесы, мы станцуем jersey,
+Отойди я войду и она воскреснет,
+Пристегнись и смотри как тебе Олеся,
+Жопа каждой из моих подруг в AMG обвесе,
+Turn around let me take my glock"""
 list_of_users = ['Fghjksev','lopyx26','Lerka22848']
+
+text = song_text.split(",")
 
 lid = 0
 tryi = 0
@@ -144,5 +151,14 @@ def msg_command(msg):
         bot.send_message(msg.chat.id, "Ошибка!")
         flag = False
         print(error)
+@bot.message_handler(commands=["song"])
+def song_command(msg):
+    global text
+    message = bot.send_message(msg.chat.id,"*Текст*")
+    for select in text:
+        bot.edit_message_text(chat_id=msg.chat.id,message_id=message.message_id, text=select)
+        time.sleep(1.5)
+    time.sleep(3)
+    bot.delete_message(chat_id=msg.chat.id,message_id=message.message_id)
 
 bot.infinity_polling()
