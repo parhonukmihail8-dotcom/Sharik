@@ -1,7 +1,10 @@
-import random, telebot, time, sqlite3, datetime
+import random, telebot, time, sqlite3, requests
 from telebot import types
+from bs4 import BeautifulSoup
 
 list_of_users = ['Fghjksev','lopyx26','Lerka22848']
+
+url_for_time = "https://time-in.ru/time/moscow"
 
 is_active_events = []
 
@@ -10,6 +13,7 @@ text_event = None
 time_event_end = None
 time_event_start = None
 name_event = None
+timei = None
 
 lid = 0
 tryi = 0
@@ -214,15 +218,21 @@ def time_event_command(msg):
     bot.send_message(msg.chat.id,"Укажите время ивента(HH:MM):")
     bot.register_next_step_handler(msg, date_event_command)
 def date_event_command(msg):
-    global time_event_end, time_event_start
+    global time_event_end
     time_event_end = msg.text
-    time_event_start = time.strftime("%H:%M")
     bot.send_message(msg.chat.id,"Укажите название ивента:")
     bot.register_next_step_handler(msg, name_event_command)
 def name_event_command(msg):
-    global name_event, events, time_event_start, time_event_end, text_event, events, is_active_events
+    global url_for_time, name_event, events, time_event_start, time_event_end, text_event, events, is_active_events, timei
     name_event = msg.text
     if len(is_active_events) <= 0:
+        response = requests.get(url_for_time)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        content_div = soup.find("div", class_="time-city-time-value")
+        timei_h = content_div.text[0:2]
+        time_m = content_div.text[3:5]
+        timei = f"{timei_h}:{time_m}"
+        time_event_start = timei
         connect = sqlite3.connect("board.db")
         cursor = connect.cursor()
         cursor.execute(f"INSERT INTO events (name_event, text_event, start_time, end_time) VALUES ('{name_event}', '{text_event}', '{time_event_start}', '{time_event_end}')")
@@ -235,6 +245,12 @@ def name_event_command(msg):
             bot.send_message(user[0], f"Ивент {name_event} начался!")
         print(f"начало {name_event}")
         while True:
+            response = requests.get(url_for_time)
+            soup = BeautifulSoup(response.content, 'html.parser')
+            content_div = soup.find("div", class_="time-city-time-value")
+            timei_h = content_div.text[0:2]
+            time_m = content_div.text[3:5]
+            timei = f"{timei_h}:{time_m}"
             connect = sqlite3.connect("board.db")
             cursor = connect.cursor()
             cursor.execute("SELECT * FROM events")
@@ -242,7 +258,7 @@ def name_event_command(msg):
             cursor.close()
             connect.close()
             for event in events:
-                if int(time.strftime("%H:%M")[0:2]) <= int(event[3][0:2]) and int(time.strftime("%H:%M")[3:5]) < int(event[3][3:5]):
+                if int(timei[0:2]) <= int(event[3][0:2]) and int(timei[3:5]) < int(event[3][3:5]):
                     connect = sqlite3.connect("board.db")
                     cursor = connect.cursor()
                     is_active_events.append(event[0])
@@ -275,5 +291,16 @@ def events_command(msg):
         bot.send_message(msg.chat.id,f"Событие: {event[0]} текст к ивенту: {event[1]} время начала-конца: {event[2]}-{event[3]}")
     cursor.close()
     connect.close()
+@bot.message_handler(commands=["time_on_server"])
+def time_on_server_command(msg):
+    global url_for_time
+    response = requests.get(url_for_time)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    content_div = soup.find("div", class_="time-city-time-value")
+    if msg.chat.id == 7133131940:
+        if content_div:
+            bot.send_message(msg.chat.id, content_div.text)
+        else:
+            print("No article content found.")
 
 bot.infinity_polling()
