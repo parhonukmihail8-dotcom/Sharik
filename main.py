@@ -258,7 +258,7 @@ def name_event_command(msg):
             cursor.close()
             connect.close()
             for event in events:
-                if int(timei[0:2]) <= int(event[3][0:2]) and int(timei[3:5]) < int(event[3][3:5]):
+                if int(timei[0:2]) == int(event[3][0:2]) and int(timei[3:5]) == int(event[3][3:5]):
                     connect = sqlite3.connect("board.db")
                     cursor = connect.cursor()
                     is_active_events.append(event[0])
