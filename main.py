@@ -39,7 +39,7 @@ def start_command(msg):
     """)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS events (
-        name_event TEXT,
+        name_event TEXT PRIMARY KEY,
         text_event TEXT,
         start_time TEXT,
         end_time TEXT
@@ -229,33 +229,41 @@ def name_event_command(msg):
         connect.commit()
         cursor.execute("SELECT * FROM users")
         users = cursor.fetchall()
-        cursor.execute("SELECT * FROM events")
-        events = cursor.fetchall()
         cursor.close()
         connect.close()
         for user in users:
             bot.send_message(user[0], f"Ивент {name_event} начался!")
         print(f"начало {name_event}")
         while True:
-            while len(events) > 0:
-                for event in events:
-                    if int(time.strftime("%H:%M")[0:2]) <= int(event[3][0:2]) and int(time.strftime("%H:%M")[3:5]) <= int(event[3][3:5]):
-                        connect = sqlite3.connect("board.db")
-                        cursor = connect.cursor()
-                        is_active_events.append(event[0])
-                        cursor.close()
-                        connect.close()
-                    else:
-                        print(f"конец {event[0]}")
-                        connect = sqlite3.connect("board.db")
-                        cursor = connect.cursor()
-                        is_active_events.remove(event[0])
-                        cursor.execute(f"DELETE FROM events WHERE name_event = '{event[0]}'")  
-                        cursor.execute("SELECT * FROM users")
-                        for user in cursor.fetchall():
-                            bot.send_message(user[0], f"Ивент {event[0]} закончился!")
-                        cursor.close()
-                        connect.close()
+            connect = sqlite3.connect("board.db")
+            cursor = connect.cursor()
+            cursor.execute("SELECT * FROM events")
+            events = cursor.fetchall()
+            cursor.close()
+            connect.close()
+            for event in events:
+                if int(time.strftime("%H:%M")[0:2]) <= int(event[3][0:2]) and int(time.strftime("%H:%M")[3:5]) < int(event[3][3:5]):
+                    connect = sqlite3.connect("board.db")
+                    cursor = connect.cursor()
+                    is_active_events.append(event[0])
+                    cursor.close()
+                    connect.close()
+                else:
+                    connect = sqlite3.connect("board.db")
+                    cursor = connect.cursor()
+                    is_active_events.remove(event[0])
+                    cursor.execute('DELETE FROM events;',)
+                    connect.commit()
+                    cursor.close()
+                    connect.close()
+                    connect = sqlite3.connect("board.db")
+                    cursor = connect.cursor()
+                    cursor.execute("SELECT * FROM users")
+                    users = cursor.fetchall()
+                    cursor.close()
+                    connect.close()
+                    for user in users:
+                        bot.send_message(user[0], f"Ивент {event[0]} закончился!")
 @bot.message_handler(commands=["events"])
 def events_command(msg):
     bot.send_message(msg.chat.id, "Список событий:")
